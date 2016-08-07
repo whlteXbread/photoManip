@@ -20,7 +20,10 @@ def get_exposure_time_in_s(fn):
 
 def get_phoot_list(dirName):
   onlyfiles = [f for f in listdir(dirName) if (isfile(join(dirName, f)) and f.endswith(".jpg"))]
-  return onlyfiles
+  fnamesWithPaths = []
+  for fname in onlyfiles:
+    fnamesWithPaths.append(join(dirName,fname))
+  return fnamesWithPaths
 
 def split_scale_image(inImage,numImages):
   rIm, gIm, bIm = inImage.split()
