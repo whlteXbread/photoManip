@@ -6,6 +6,21 @@ from PIL.ExifTags import TAGS
 from os import listdir
 from os.path import isfile, join
 import argparse
+import operator
+
+# code sample from http://effbot.org/zone/pil-histogram-equalization.htm -------
+def equalize(h):
+  lut = []
+  for b in range(0, len(h), 256):
+    # step size
+    step = reduce(operator.add, h[b:b+256]) / 255
+    # create equalization lookup table
+    n = 0
+    for i in range(256):
+      lut.append(n / step)
+      n = n + h[i+b]
+  return lut
+# code sample from http://effbot.org/zone/pil-histogram-equalization.htm -------
 
 def get_exposure_time_in_s(fn):
     ret = {}
@@ -160,12 +175,20 @@ if __name__ == "__main__":
   
     # (below is what we did before
     #compositeImage = Im.blend(compositeImage,thisImage,0.2)
-
-  # now that everything has been added together, convert them back to ints
-  # and then merge the image before display.
+  
+  # finally convert them back to ints and then merge the image before display.
   rCompIm = ImMath.eval("convert(a, 'L')",a=rCompIm)
   gCompIm = ImMath.eval("convert(a, 'L')",a=gCompIm)
   bCompIm = ImMath.eval("convert(a, 'L')",a=bCompIm)
+  
+  # now that everything has been added together, do some histogram equalization
+  rLut = equalize(rCompIm.histogram())
+  gLut = equalize(gCompIm.histogram())
+  bLut = equalize(bCompIm.histogram())
+  
+  rCompIm = rCompIm.point(rLut)
+  gCompIm = gCompIm.point(gLut)
+  bCompIm = bCompIm.point(bLut)
   compositeImage = Im.merge('RGB',(rCompIm,gCompIm,bCompIm))
 
   print "minimum image dimension: " + str(cropTo) + " pixels"
