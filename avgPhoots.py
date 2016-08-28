@@ -104,6 +104,18 @@ def square_image(fname,cropTo):
   sqSzw, sqSzh = squaredImage.size
   return squaredImage
 
+def print_status(currImage,totalImages):
+  print "processing " + phootList[0] + " (" + str(currImage) + " of " + str(totalImages) + ")"
+
+def pad_or_crop(combMethod,fname):
+  if (combMethod == "pad"):
+    pilImage = pad_image(fname, expandTo)
+  elif (combMethod == "crop"):
+    pilImage = square_image(fname, cropTo)
+  else:
+    raise ValueError('invalid value for combinationMethod')
+  return pilImage
+
 if __name__ == "__main__": 
   parser = argparse.ArgumentParser()
   parser.add_argument("imgPath", help="path of the directory of images you'd like to process")
@@ -144,13 +156,9 @@ if __name__ == "__main__":
     cropTo -= 1
 
   numImages = len(phootList)
-  print "processing " + phootList[0] + " (1 of " + str(numImages) + ")"
-  if (args.combinationMethod == "pad"):
-    compositeImage = pad_image(phootList[0],expandTo)
-  elif (args.combinationMethod == "crop"):
-    compositeImage = square_image(phootList[0],cropTo)
-  else:
-    raise ValueError('invalid value for combinationMethod')
+  print_status(1, numImages)
+  fname = phootList[0]
+  compositeImage = pad_or_crop(args.combinationMethod, fname)
   phootList.pop(0)
   rCompIm, gCompIm, bCompIm = split_scale_image(compositeImage, numImages)
 
@@ -160,13 +168,8 @@ if __name__ == "__main__":
   progressCounter = 1
   for fname in phootList:
     progressCounter += 1
-    print "processing " + fname + " (" + str(progressCounter) + " of " + str(numImages) + ")"
-    if (args.combinationMethod == "pad"):
-      thisImage = pad_image(fname, expandTo)
-    elif (args.combinationMethod == "crop"):
-      thisImage = square_image(fname, cropTo)
-    else:
-      raise ValueError('invalid value for combinationMethod')
+    print_status(progressCounter, numImages)
+    thisImage = pad_or_crop(args.combinationMethod,fname)
     thisR, thisG, thisB = split_scale_image(thisImage, numImages)
     # now add them together
     rCompIm = ImMath.eval("a + b",a=rCompIm,b=thisR)
