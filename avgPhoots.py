@@ -35,186 +35,186 @@ def get_exposure_time_in_s(fn):
   for tag, value in info.items():
       decoded = TAGS.get(tag, tag)
       ret[decoded] = value
-  exposureTime = ret[EXPOSURE_TIME]
-  exposureTimeinS = (float(exposureTime[0])) / (float(exposureTime[1]))
-  return exposureTimeinS
+  exposure_time = ret[EXPOSURE_TIME]
+  exposure_time_in_s = (float(exposure_time[0])) / (float(exposure_time[1]))
+  return exposure_time_in_s
 
 
-def get_phoot_list(dirName):
-  onlyfiles = [join(dirName, f) for f in listdir(dirName) if (isfile(join(dirName, f)) and f.endswith(".jpg"))]
+def get_phoot_list(dir_name):
+  onlyfiles = [join(dir_name, f) for f in listdir(dir_name) if (isfile(join(dir_name, f)) and f.endswith(".jpg"))]
   return onlyfiles
 
 
-def split_scale_image(inImage, numImages):
-  rIm, gIm, bIm = inImage.split()
-  rIm = ImMath.eval("a / b", a=rIm, b=numImages)
-  gIm = ImMath.eval("a / b", a=gIm, b=numImages)
-  bIm = ImMath.eval("a / b", a=bIm, b=numImages)
-  return rIm, gIm, bIm
+def split_scale_image(input_image, num_images):
+  r_im, g_im, b_im = input_image.split()
+  r_im = ImMath.eval("a / b", a=r_im, b=num_images)
+  g_im = ImMath.eval("a / b", a=g_im, b=num_images)
+  b_im = ImMath.eval("a / b", a=b_im, b=num_images)
+  return r_im, g_im, b_im
 
 
-def even_image(pilImage):
-  width, height = pilImage.size
+def even_image(pil_image):
+  width, height = pil_image.size
   if ((width % 2) == 1):
     # crop the width by 1
-    pilImage = pilImage.crop((1, 0, width, height))
+    pil_image = pil_image.crop((1, 0, width, height))
   if ((height % 2) == 1):
     # crop the height by 1
-    pilImage = pilImage.crop((0, 1, width, height))
-  return pilImage
+    pil_image = pil_image.crop((0, 1, width, height))
+  return pil_image
 
 
-def get_image_orientation(pilImage):
-  width, height = pilImage.size
+def get_image_orientation(pil_image):
+  width, height = pil_image.size
   # do a cheap trick to determine orientation
   if (width > height):
     # image is landscape
-    thisImOrient = LANDSCAPE
+    image_orientation = LANDSCAPE
   elif (width < height):
     # image is portrait
-    thisImOrient = PORTRAIT
+    image_orientation = PORTRAIT
   elif (width == height):
     # image is square
-    thisImOrient = SQUARE
-  return thisImOrient
+    image_orientation = SQUARE
+  return image_orientation
 
 
-def pad_image(fname, expandTo):
-  thisImage = Im.open(fname)
-  thisImage = even_image(thisImage)
-  width, height = thisImage.size
-  thisImOrient = get_image_orientation(thisImage)
-  # this need to find the smallest dim so we can expand that to `expandTo`
-  minDim = min(width, height)
-  padAmount = (expandTo - minDim) / 2
-  # print minDim + padAmount + padAmount
-  paddedImage = ImOps.expand(
-    thisImage, border=padAmount, fill=(255, 255, 255))
-  compImW, compImH = paddedImage.size
-  maxDim = max(compImW, compImH)
-  cropAmount = (maxDim - expandTo) / 2
-  if (thisImOrient == LANDSCAPE):
-    paddedImage = paddedImage.crop(
-      (cropAmount, 0, compImW - cropAmount, compImH))
-  elif (thisImOrient == PORTRAIT):
-    paddedImage = paddedImage.crop(
-      (0, cropAmount, compImW, compImH - cropAmount))
-  elif (thisImOrient == SQUARE):
+def pad_image(fname, expand_to):
+  this_image = Im.open(fname)
+  this_image = even_image(this_image)
+  width, height = this_image.size
+  image_orientation = get_image_orientation(this_image)
+  # this need to find the smallest dim so we can expand that to `expand_to`
+  min_dim = min(width, height)
+  pad_amount = (expand_to - min_dim) / 2
+  # print min_dim + pad_amount + pad_amount
+  padded_image = ImOps.expand(
+    this_image, border=pad_amount, fill=(255, 255, 255))
+  width, height = padded_image.size
+  maxDim = max(width, height)
+  cropAmount = (maxDim - expand_to) / 2
+  if (image_orientation == LANDSCAPE):
+    padded_image = padded_image.crop(
+      (cropAmount, 0, width - cropAmount, height))
+  elif (image_orientation == PORTRAIT):
+    padded_image = padded_image.crop(
+      (0, cropAmount, width, height - cropAmount))
+  elif (image_orientation == SQUARE):
     # don't think I need to do anything here.
     pass
-  return paddedImage
+  return padded_image
 
 
-def square_image(fname, cropTo):
-  thisImage = Im.open(fname)
-  thisImage = even_image(thisImage)
-  width, height = thisImage.size
-  # this need to find the smallest dim so we can expand that to `expandTo`
-  wCropAmount = (width - cropTo) / 2
-  hCropAmount = (height - cropTo) / 2
-  squaredImage = thisImage.crop(
-    (wCropAmount, hCropAmount, width - wCropAmount, 
-    height - hCropAmount))
-  sqSzw, sqSzh = squaredImage.size
-  return squaredImage
+def square_image(fname, crop_to):
+  this_image = Im.open(fname)
+  this_image = even_image(this_image)
+  width, height = this_image.size
+  # this need to find the smallest dim so we can expand that to `expand_to`
+  w_crop_amount = (width - crop_to) / 2
+  h_crop_amount = (height - crop_to) / 2
+  squared_image = this_image.crop(
+    (w_crop_amount, h_crop_amount, width - w_crop_amount, 
+    height - h_crop_amount))
+  sqSzw, sqSzh = squared_image.size
+  return squared_image
 
 
-def print_status(currImage, totalImages):
-  print "processing " + phootList[0] + " (" + str(currImage) + " of " + str(
-    totalImages) + ")"
+def print_status(curr_fname, curr_image, total_images):
+  print "processing " + curr_fname + " (" + str(curr_image) + " of " + str(
+    total_images) + ")"
 
 
-def pad_or_crop(combMethod, fname):
-  if (combMethod == "pad"):
-    pilImage = pad_image(fname, expandTo)
-  elif (combMethod == "crop"):
-    pilImage = square_image(fname, cropTo)
+def pad_or_crop(comb_method, fname):
+  if (comb_method == "pad"):
+    pil_image = pad_image(fname, expand_to)
+  elif (comb_method == "crop"):
+    pil_image = square_image(fname, crop_to)
   else:
-    raise ValueError('invalid value for combinationMethod')
-  return pilImage
+    raise ValueError('invalid value for combination_method')
+  return pil_image
 
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
   parser.add_argument("imgPath", help="path of the directory of images you'd like to process")
-  parser.add_argument("combinationMethod", help="either 'crop' (all images are cropped to smallest dimension) or 'pad' (all images are padded to largest dimension))")
+  parser.add_argument("combination_method", help="either 'crop' (all images are cropped to smallest dimension) or 'pad' (all images are padded to largest dimension))")
   parser.add_argument("outName", help="name of averaged output file including extension")
   args = parser.parse_args()
 
   # okay, let's get a list of phoots
-  phootList = get_phoot_list(args.imgPath)
+  phoot_list = get_phoot_list(args.imgPath)
 
   # init some vars to store exposure time, etc.
-  exposureTimes = []
-  imageWs = []
-  imageHs = []
-  totalShutterOpen = 0
+  exposure_times = []
+  image_widths = []
+  image_heights = []
+  total_shutter_open = 0
 
   # now loop through the list and get exposure times and max dimensions
-  for fname in phootList:
-    thisExposure = get_exposure_time_in_s(fname)
-    exposureTimes.append(thisExposure)
-    totalShutterOpen += thisExposure
+  for fname in phoot_list:
+    this_exposure = get_exposure_time_in_s(fname)
+    exposure_times.append(this_exposure)
+    total_shutter_open += this_exposure
     # open the image and get the dimensions
-    thisIm = Im.open(fname)
-    width, height = thisIm.size
-    imageWs.append(width)
-    imageHs.append(height)
+    this_im = Im.open(fname)
+    width, height = this_im.size
+    image_widths.append(width)
+    image_heights.append(height)
 
-  maxW = max(imageWs)
-  maxH = max(imageHs)
-  minW = min(imageWs)
-  minH = min(imageHs)
+  maxW = max(image_widths)
+  maxH = max(image_heights)
+  minW = min(image_widths)
+  minH = min(image_heights)
 
-  expandTo = max(maxW, maxH)
-  if ((expandTo % 2) == 1):
-    expandTo -= 1
-  cropTo = min(minW, minH)
-  if ((cropTo % 2) == 1):
-    cropTo -= 1
+  expand_to = max(maxW, maxH)
+  if ((expand_to % 2) == 1):
+    expand_to -= 1
+  crop_to = min(minW, minH)
+  if ((crop_to % 2) == 1):
+    crop_to -= 1
 
-  numImages = len(phootList)
-  print_status(1, numImages)
-  fname = phootList[0]
-  compositeImage = pad_or_crop(args.combinationMethod, fname)
-  phootList.pop(0)
-  rCompIm, gCompIm, bCompIm = split_scale_image(compositeImage, numImages)
+  num_images = len(phoot_list)
+  fname = phoot_list[0]
+  print_status(fname, 1, num_images)
+  composite_image = pad_or_crop(args.combination_method, fname)
+  phoot_list.pop(0)
+  r_comp_im, g_comp_im, b_comp_im = split_scale_image(composite_image, num_images)
 
   # now loop through the list again and first expand the images
   # and then combine the images.
 
-  progressCounter = 1
-  for fname in phootList:
-    progressCounter += 1
-    print_status(progressCounter, numImages)
-    thisImage = pad_or_crop(args.combinationMethod, fname)
-    thisR, thisG, thisB = split_scale_image(thisImage, numImages)
+  progress_counter = 1
+  for fname in phoot_list:
+    progress_counter += 1
+    print_status(fname, progress_counter, num_images)
+    this_image = pad_or_crop(args.combination_method, fname)
+    thisR, thisG, thisB = split_scale_image(this_image, num_images)
     # now add them together
-    rCompIm = ImMath.eval("a + b", a=rCompIm, b=thisR)
-    gCompIm = ImMath.eval("a + b", a=gCompIm, b=thisG)
-    bCompIm = ImMath.eval("a + b", a=bCompIm, b=thisB)
+    r_comp_im = ImMath.eval("a + b", a=r_comp_im, b=thisR)
+    g_comp_im = ImMath.eval("a + b", a=g_comp_im, b=thisG)
+    b_comp_im = ImMath.eval("a + b", a=b_comp_im, b=thisB)
 
   # (below is what we did before
-  # compositeImage = Im.blend(compositeImage, thisImage,0.2)
+  # composite_image = Im.blend(composite_image, this_image,0.2)
 
   # finally convert them back to ints and then merge the image before display.
-  rCompIm = ImMath.eval("convert(a, 'L')", a=rCompIm)
-  gCompIm = ImMath.eval("convert(a, 'L')", a=gCompIm)
-  bCompIm = ImMath.eval("convert(a, 'L')", a=bCompIm)
+  r_comp_im = ImMath.eval("convert(a, 'L')", a=r_comp_im)
+  g_comp_im = ImMath.eval("convert(a, 'L')", a=g_comp_im)
+  b_comp_im = ImMath.eval("convert(a, 'L')", a=b_comp_im)
 
   # now that everything has been added together, do some histogram equalization
-  rLut = equalize(rCompIm.histogram())
-  gLut = equalize(gCompIm.histogram())
-  bLut = equalize(bCompIm.histogram())
+  r_lut = equalize(r_comp_im.histogram())
+  g_lut = equalize(g_comp_im.histogram())
+  b_lut = equalize(b_comp_im.histogram())
 
-  rCompIm = rCompIm.point(rLut)
-  gCompIm = gCompIm.point(gLut)
-  bCompIm = bCompIm.point(bLut)
-  compositeImage = Im.merge('RGB', (rCompIm, gCompIm, bCompIm))
+  r_comp_im = r_comp_im.point(r_lut)
+  g_comp_im = g_comp_im.point(g_lut)
+  b_comp_im = b_comp_im.point(b_lut)
+  composite_image = Im.merge('RGB', (r_comp_im, g_comp_im, b_comp_im))
 
-  print "minimum image dimension: " + str(cropTo) + " pixels"
-  print "maximum image dimension: " + str(expandTo) + " pixels"
-  print "total exposure time in seconds: " + str(totalShutterOpen)
+  print "minimum image dimension: " + str(crop_to) + " pixels"
+  print "maximum image dimension: " + str(expand_to) + " pixels"
+  print "total exposure time in seconds: " + str(total_shutter_open)
 
-  # compositeImage.show()
-  compositeImage.save(args.outName)
+  # composite_image.show()
+  composite_image.save(args.outName)
