@@ -12,6 +12,8 @@ EXPOSURE_TIME = 'ExposureTime'
 LANDSCAPE = 'landscape'
 PORTRAIT = 'portrait'
 SQUARE = 'square'
+PAD = 'pad'
+CROP = 'crop'
 
 # code sample from http://effbot.org/zone/pil-histogram-equalization.htm -------
 def equalize(h):
@@ -45,11 +47,14 @@ def get_phoot_list(dir_name):
   return onlyfiles
 
 
-def split_scale_image(input_image, num_images):
+def split_scale_image(input_image, scale_factor):
   r_im, g_im, b_im = input_image.split()
-  r_im = ImMath.eval("a / b", a=r_im, b=num_images)
-  g_im = ImMath.eval("a / b", a=g_im, b=num_images)
-  b_im = ImMath.eval("a / b", a=b_im, b=num_images)
+  r_im = ImMath.eval("convert(a, 'F')", a=r_im)
+  r_im = ImMath.eval("a / b", a=r_im, b=scale_factor)
+  g_im = ImMath.eval("convert(a, 'F')", a=g_im)
+  g_im = ImMath.eval("a / b", a=g_im, b=scale_factor)
+  b_im = ImMath.eval("convert(a, 'F')", a=b_im)
+  b_im = ImMath.eval("a / b", a=b_im, b=scale_factor)
   return r_im, g_im, b_im
 
 
@@ -125,9 +130,9 @@ def print_status(curr_fname, curr_image, total_images):
 
 
 def pad_or_crop(comb_method, fname):
-  if (comb_method == "pad"):
+  if (comb_method == PAD):
     pil_image = pad_image(fname, expand_to)
-  elif (comb_method == "crop"):
+  elif (comb_method == CROP):
     pil_image = square_image(fname, crop_to)
   else:
     raise ValueError('invalid value for combination_method')
@@ -161,15 +166,22 @@ if __name__ == "__main__":
     image_widths.append(width)
     image_heights.append(height)
 
-  maxW = max(image_widths)
-  maxH = max(image_heights)
-  minW = min(image_widths)
-  minH = min(image_heights)
+  # now that we have the total length, calculate scale factors---
+  # trying to get as close to what would be an actual multiple exposure
+  # as possible
+  scale_factors = []
+  for exp_time in exposure_times:
+    scale_factors.append(exp_time / total_shutter_open)
 
-  expand_to = max(maxW, maxH)
+  max_w = max(image_widths)
+  max_h = max(image_heights)
+  min_w = min(image_widths)
+  min_h = min(image_heights)
+
+  expand_to = max(max_w, max_h)
   if ((expand_to % 2) == 1):
     expand_to -= 1
-  crop_to = min(minW, minH)
+  crop_to = min(min_w, min_h)
   if ((crop_to % 2) == 1):
     crop_to -= 1
 
@@ -210,6 +222,7 @@ if __name__ == "__main__":
   r_comp_im = r_comp_im.point(r_lut)
   g_comp_im = g_comp_im.point(g_lut)
   b_comp_im = b_comp_im.point(b_lut)
+
   composite_image = Im.merge('RGB', (r_comp_im, g_comp_im, b_comp_im))
 
   print "minimum image dimension: " + str(crop_to) + " pixels"
