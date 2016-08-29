@@ -50,11 +50,11 @@ def get_phoot_list(dir_name):
 def split_scale_image(input_image, scale_factor):
   r_im, g_im, b_im = input_image.split()
   r_im = ImMath.eval("convert(a, 'F')", a=r_im)
-  r_im = ImMath.eval("a / b", a=r_im, b=scale_factor)
+  r_im = ImMath.eval("a * b", a=r_im, b=scale_factor)
   g_im = ImMath.eval("convert(a, 'F')", a=g_im)
-  g_im = ImMath.eval("a / b", a=g_im, b=scale_factor)
+  g_im = ImMath.eval("a * b", a=g_im, b=scale_factor)
   b_im = ImMath.eval("convert(a, 'F')", a=b_im)
-  b_im = ImMath.eval("a / b", a=b_im, b=scale_factor)
+  b_im = ImMath.eval("a * b", a=b_im, b=scale_factor)
   return r_im, g_im, b_im
 
 
@@ -190,7 +190,7 @@ if __name__ == "__main__":
   print_status(fname, 1, num_images)
   composite_image = pad_or_crop(args.combination_method, fname)
   phoot_list.pop(0)
-  r_comp_im, g_comp_im, b_comp_im = split_scale_image(composite_image, num_images)
+  r_comp_im, g_comp_im, b_comp_im = split_scale_image(composite_image, (1.0 / num_images))
 
   # now loop through the list again and first expand the images
   # and then combine the images.
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     progress_counter += 1
     print_status(fname, progress_counter, num_images)
     this_image = pad_or_crop(args.combination_method, fname)
-    thisR, thisG, thisB = split_scale_image(this_image, num_images)
+    thisR, thisG, thisB = split_scale_image(this_image, (1.0 / num_images))
     # now add them together
     r_comp_im = ImMath.eval("a + b", a=r_comp_im, b=thisR)
     g_comp_im = ImMath.eval("a + b", a=g_comp_im, b=thisG)
