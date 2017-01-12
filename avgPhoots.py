@@ -128,26 +128,36 @@ def print_status(curr_fname, curr_image, total_images):
   print "processing " + curr_fname + " (" + str(curr_image) + " of " + str(
     total_images) + ")"
 
-
-def pad_or_crop(comb_method, fname):
+def get_final_dimension(comb_method, image_widths, image_heights):
   if (comb_method == PAD):
-    pil_image = pad_image(fname, expand_to)
+    max_w = max(image_widths)
+    max_h = max(image_heights)
+    expand_to = max(max_w, max_h)
+    if ((expand_to % 2) == 1):
+      expand_to -= 1
+    return expand_to
   elif (comb_method == CROP):
-    pil_image = square_image(fname, crop_to)
+    min_w = min(image_widths)
+    min_h = min(image_heights)
+    crop_to = min(min_w, min_h)
+    if ((crop_to % 2) == 1):
+      crop_to -= 1
+    return crop_to
+  else: 
+    raise ValueError('invalid value for combination_method')
+
+def pad_or_crop(comb_method, fname, output_dimension):
+  if (comb_method == PAD):
+    pil_image = pad_image(fname, output_dimension)
+  elif (comb_method == CROP):
+    pil_image = square_image(fname, output_dimension)
   else:
     raise ValueError('invalid value for combination_method')
   return pil_image
 
-
-if __name__ == "__main__":
-  parser = argparse.ArgumentParser()
-  parser.add_argument("imgPath", help="path of the directory of images you'd like to process")
-  parser.add_argument("combination_method", help="either 'crop' (all images are cropped to smallest dimension) or 'pad' (all images are padded to largest dimension))")
-  parser.add_argument("outName", help="name of averaged output file including extension")
-  args = parser.parse_args()
-
+def average_dir(imgPath,combination_method,outName):
   # okay, let's get a list of phoots
-  phoot_list = get_phoot_list(args.imgPath)
+  phoot_list = get_phoot_list(imgPath)
 
   # init some vars to store exposure time, etc.
   exposure_times = []
@@ -173,22 +183,12 @@ if __name__ == "__main__":
   for exp_time in exposure_times:
     scale_factors.append(exp_time / total_shutter_open)
 
-  max_w = max(image_widths)
-  max_h = max(image_heights)
-  min_w = min(image_widths)
-  min_h = min(image_heights)
-
-  expand_to = max(max_w, max_h)
-  if ((expand_to % 2) == 1):
-    expand_to -= 1
-  crop_to = min(min_w, min_h)
-  if ((crop_to % 2) == 1):
-    crop_to -= 1
+  output_dimension = get_final_dimension(combination_method, image_widths, image_heights)
 
   num_images = len(phoot_list)
   fname = phoot_list[0]
   print_status(fname, 1, num_images)
-  composite_image = pad_or_crop(args.combination_method, fname)
+  composite_image = pad_or_crop(combination_method, fname, output_dimension)
   phoot_list.pop(0)
   r_comp_im, g_comp_im, b_comp_im = split_scale_image(composite_image, (1.0 / num_images))
 
@@ -199,7 +199,7 @@ if __name__ == "__main__":
   for fname in phoot_list:
     progress_counter += 1
     print_status(fname, progress_counter, num_images)
-    this_image = pad_or_crop(args.combination_method, fname)
+    this_image = pad_or_crop(combination_method, fname, output_dimension)
     thisR, thisG, thisB = split_scale_image(this_image, (1.0 / num_images))
     # now add them together
     r_comp_im = ImMath.eval("a + b", a=r_comp_im, b=thisR)
@@ -225,9 +225,18 @@ if __name__ == "__main__":
 
   composite_image = Im.merge('RGB', (r_comp_im, g_comp_im, b_comp_im))
 
-  print "minimum image dimension: " + str(crop_to) + " pixels"
-  print "maximum image dimension: " + str(expand_to) + " pixels"
+  print "minimum image dimension: " + str(min(min(image_widths),min(image_heights))) + " pixels"
+  print "maximum image dimension: " + str(max(max(image_widths), max(image_heights))) + " pixels"
   print "total exposure time in seconds: " + str(total_shutter_open)
 
   # composite_image.show()
-  composite_image.save(args.outName)
+  composite_image.save(outName)
+
+if __name__ == "__main__":
+  parser = argparse.ArgumentParser()
+  parser.add_argument("imgPath", help="path of the directory of images you'd like to process")
+  parser.add_argument("combination_method", help="either 'crop' (all images are cropped to smallest dimension) or 'pad' (all images are padded to largest dimension))")
+  parser.add_argument("outName", help="name of averaged output file including extension")
+  args = parser.parse_args()
+
+  average_dir(args.imgPath,args.combination_method,args.outName)
