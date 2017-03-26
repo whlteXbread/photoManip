@@ -1,80 +1,91 @@
+#! /usr/local/bin/python3
+import argparse
+import json
+from os import path, makedirs
+from urllib.parse import urlparse
+
 import flickrapi
 import wget
-from os import path, walk, remove, makedirs
-from urlparse import urlparse
-import json
-from datetime import date, datetime, timedelta
-from apikeys import *
-from avgPhoots import *
 
-import urllib3.contrib.pyopenssl
+from apikeys import flickrKey, flickrSecret
+from avgPhoots import average_dir
+
+ORIGINAL = 'Original'
 
 # instantiate the flickrAPI object
-flickrAPI = flickrapi.FlickrAPI(flickrKey, flickrSecret, cache=True)
-class picinfo(object):
-  """This class will store information about pics downloaded from flickr."""
-  picoutdir = 'imageDL'
-  def __init__(self,flickrSpec):
-    self.photo_size = 'Original'
-    self.flickrSpec = flickrSpec
-    self.sourceUrls = self.urlMaker()
-    self.filename = self.picoutdir + '/' + self.fnameMaker()
-    self.flickrID = flickrSpec.get('id')
-    deets = flickrAPI.photos_getInfo(photo_id=flickrSpec.get('id'))
-    self.taken = deets.find('photo').find('dates').attrib['taken']
-  def urlMaker(self):
-    sizes = flickrAPI.photos_getSizes(photo_id=self.flickrSpec.get('id'))
-    out_dict = {}
-    for size_element in sizes.find('sizes').findall('size'):
-      label = size_element.attrib['label']
-      url = size_element.attrib['source']
-      out_dict[label] = url
-    return out_dict
-  def fnameMaker(self):
-    urlstub, fname = path.split(self.sourceUrls[self.photo_size])
-    return fname
-  def downloadOriginal(self):
-    download_url = self.sourceUrls[self.photo_size]
-    parsed_url = urlparse(download_url)
-    o_name = path.basename(parsed_url.path)
-    if not path.exists(path.join(self.picoutdir,o_name)):
-      wget.download(download_url,self.picoutdir)
+flickr_api = flickrapi.FlickrAPI(flickrKey, flickrSecret, cache=True)
+class PicInfo(object):
+    """This class will store information about pics downloaded from flickr
+     and download the file that was originally uploaded to flickr."""
+    picoutdir = 'imageDL'
+    photo_size = ORIGINAL
+    def __init__(self, flickr_spec):
+        self.flickr_spec = flickr_spec
+        self.source_urls = self.url_maker()
+        self.filename = self.picoutdir + '/' + self.fname_maker()
+        self.flickr_id = flickr_spec.get('id')
+        deets = flickr_api.photos_getInfo(photo_id=flickr_spec.get('id'))
+        self.taken = deets.find('photo').find('dates').attrib['taken']
+    def url_maker(self):
+        """Generates the download URL for each photo size."""
+        sizes = flickr_api.photos_getSizes(photo_id=self.flickr_spec.get('id'))
+        out_dict = {}
+        for size_element in sizes.find('sizes').findall('size'):
+            label = size_element.attrib['label']
+            url = size_element.attrib['source']
+            out_dict[label] = url
+        return out_dict
+    def fname_maker(self):
+        """Generates the filename for storage on the local system."""
+        _, fname = path.split(self.source_urls[self.photo_size])
+        return fname
+    def download(self):
+        """Downloads the photo in the size specified by self.photo_size,
+         places photo in directory specified by self.picoutdir ."""
+        download_url = self.source_urls[self.photo_size]
+        parsed_url = urlparse(download_url)
+        o_name = path.basename(parsed_url.path)
+        if not path.exists(path.join(self.picoutdir, o_name)):
+            wget.download(download_url, self.picoutdir)
 
-def download_and_average(flickrSet):
-  # real quick make some folders for all the months
-  for month in range(1,13):
-    if not path.isdir(str(month)):
-      makedirs(str(month))
-  
-  # check to see if there's a download log. if there is, load it. if not, initialize it
-  jsonDLDB = "downloaded_from_" + flickrSet + ".json"
-  if not path.exists(jsonDLDB):
-    downloaded_images = []
-  else: 
-    with open(jsonDLDB,'r') as f:
-      downloaded_images = json.load(f)
-  
-  # first walk the set and get all the photos from the set
-  for photo in flickrAPI.walk_set(flickrSet):
-    if photo.get('id') in downloaded_images:
-      print photo.get('id') + " already downloaded"
+def download_and_average(flickr_set):
+    """Downloads all files in a flickr set with ID flickr_set and stores
+     them in folders based on which month they were taken."""
+    # real quick make some folders for all the months
+    for month in range(1, 13):
+        if not path.isdir(str(month)):
+            makedirs(str(month))
+
+    # check to see if there's a download log. if there is, load it. if not, initialize it
+    json_dl_db = "downloaded_from_" + flickr_set + ".json"
+    if not path.exists(json_dl_db):
+        downloaded_images = []
     else:
-      print "\ndownloading " + photo.get('id') + "\n"
-      photo_data = picinfo(photo)
-      month_taken = str(int(photo_data.taken[5:7]))
-      photo_data.picoutdir = month_taken
-      photo_data.downloadOriginal()
-      downloaded_images.append(photo.get('id'))
-      with open(jsonDLDB,'w') as f:
-        all_downloaded = json.dump(downloaded_images,f)
-  
-  # okay, now that we're done with all that, loop through the dirs and make an average.
-  for month in range(1,13):
-    average_dir(str(month),'crop','average_of_month_' + str(month) + '.jpg')
+        with open(json_dl_db, 'r') as filename:
+            downloaded_images = json.load(filename)
+
+    # first walk the set and get all the photos from the set
+    for photo in flickr_api.walk_set(flickr_set):
+        if photo.get('id') in downloaded_images:
+            print(photo.get('id') + " already downloaded")
+        else:
+            print("\ndownloading " + photo.get('id') + "\n")
+            photo_data = PicInfo(photo)
+            month_taken = str(int(photo_data.taken[5:7]))
+            photo_data.picoutdir = month_taken
+            photo_data.download()
+            downloaded_images.append(photo.get('id'))
+            with open(json_dl_db, 'w') as filename:
+                json.dump(downloaded_images, filename)
+
+    # okay, now that we're done with all that, loop through the dirs and make an average.
+    for month in range(1, 12):
+        average_dir(str(month), 'crop', 'average_of_month_' + str(month) + '.jpg')
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser()
-  parser.add_argument("flickrSet", help="the ID of the flickr set you'd like to download and average by month")
-  args = parser.parse_args()
-  
-  download_and_average(args.flickrSet)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("flickr_set",
+                        help="the ID of the flickr set you'd like to download and average by month")
+    args = parser.parse_args()
+
+    download_and_average(args.flickr_set)
