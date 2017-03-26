@@ -18,12 +18,17 @@ PAD = 'pad'
 CROP = 'crop'
 
 class ImageTools(object):
+    """Loads an image using PIL and calculates exposure time, image width and height,
+     prepares an image for further processing, and splits an image into red, green
+     and blue channels and scales the output based on a specified scale factor."""
     def __init__(self, fname):
         self.this_image = Im.open(fname)
         self.width, self.height = self.this_image.size
         self.get_exposure_time_in_s()
 
     def get_exposure_time_in_s(self):
+        """Reads the EXIF data from the image file and calculates the exposure time
+         in seconds."""
         self.exif_data = {}
         info = self.this_image._getexif()
         for tag, value in info.items():
@@ -34,11 +39,14 @@ class ImageTools(object):
         #return exposure_time_in_s
 
     def prepare_image(self, comb_method, final_dimension):
+        """Ensures an image has even dimensions, determines the images orientation,
+         and either pads or crops an image to a specified final dimension."""
         self.even_image()
         self.get_image_orientation()
         self.pad_or_crop(comb_method, final_dimension)
 
     def even_image(self):
+        """Ensures an image has even dimensions."""
         if (self.width % 2) == 1:
             # crop the width by 1
             self.this_image = self.this_image.crop((1, 0, self.width, self.height))
@@ -49,6 +57,7 @@ class ImageTools(object):
             self.width, self.height = self.this_image.size
 
     def get_image_orientation(self):
+        """Determines the orientation of an image."""
         # do a cheap trick to determine orientation
         if self.width > self.height:
             # image is landscape
@@ -61,6 +70,8 @@ class ImageTools(object):
             self.image_orientation = SQUARE
 
     def pad_or_crop(self, comb_method, output_dimension):
+        """Wrapper function that calls the method to either pad or crop an image based
+         on input."""
         if comb_method == PAD:
             self.pad_image(output_dimension)
         elif comb_method == CROP:
@@ -69,6 +80,7 @@ class ImageTools(object):
             raise ValueError('invalid value for combination_method')
 
     def pad_image(self, expand_to):
+        """Pads an image to a specified dimension."""
         # this need to find the smallest dim so we can expand that to `expand_to`
         min_dim = min(self.width, self.height)
         pad_amount = (expand_to - min_dim) / 2
@@ -91,6 +103,7 @@ class ImageTools(object):
             pass
 
     def square_image(self, crop_to):
+        """Crops an image to a specified dimension."""
         # this need to find the smallest dim so we can expand that to `crop_to`
         w_crop_amount = (self.width - crop_to) / 2
         h_crop_amount = (self.height - crop_to) / 2
@@ -99,6 +112,8 @@ class ImageTools(object):
              self.height - h_crop_amount))
 
     def split_scale_image(self, scale_factor):
+        """Splits an image into red, green, and blue channels and scales
+         each channel by specified scale factor."""
         r_im, g_im, b_im = self.this_image.split()
         r_im = ImMath.eval("convert(a, 'F')", a=r_im)
         r_im = ImMath.eval("a * b", a=r_im, b=scale_factor)
@@ -110,6 +125,7 @@ class ImageTools(object):
 
 # code sample from http://effbot.org/zone/pil-histogram-equalization.htm -------
 def equalize(h):
+    """Applies histogram equalization to a seficied histogram."""
     lut = []
     for b in range(0, len(h), 256):
         # step size
@@ -123,15 +139,19 @@ def equalize(h):
 # code sample from http://effbot.org/zone/pil-histogram-equalization.htm -------
 
 def get_phoot_list(dir_name):
+    """Gets a list of files with extension ".jpg" in a folder."""
     onlyfiles = [join(dir_name, f) for f in listdir(dir_name)
                  if isfile(join(dir_name, f)) and f.endswith(".jpg")]
     return onlyfiles
 
 def print_status(curr_fname, curr_image, total_images):
+    """Prints the status of the processing run based on input."""
     print("processing " + curr_fname + " (" + str(curr_image) + " of " + str(
         total_images) + ")")
 
 def get_final_dimension(comb_method, image_widths, image_heights):
+    """Computes the dimensions of the final output image based on specified 
+     combination method and lists of images widths and heights."""
     if comb_method == PAD:
         max_w = max(image_widths)
         max_h = max(image_heights)
@@ -150,6 +170,8 @@ def get_final_dimension(comb_method, image_widths, image_heights):
         raise ValueError('invalid value for combination_method')
 
 def average_dir(img_path, combination_method, out_name):
+    """Averages, or makes a multiple exposure of all the photos in a specified
+     directory."""
     # okay, let's get a list of phoots
     phoot_list = get_phoot_list(img_path)
 
