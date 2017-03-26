@@ -8,7 +8,7 @@ import flickrapi
 import wget
 
 from apikeys import flickrKey, flickrSecret
-from avgPhoots import average_dir
+from avg_phoots import average_dir
 
 ORIGINAL = 'Original'
 
