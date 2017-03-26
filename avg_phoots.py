@@ -36,7 +36,6 @@ class ImageTools(object):
             self.exif_data[decoded] = value
         self.exposure_time = self.exif_data[EXPOSURE_TIME]
         self.exposure_time_in_s = (float(self.exposure_time[0])) / (float(self.exposure_time[1]))
-        #return exposure_time_in_s
 
     def prepare_image(self, comb_method, final_dimension):
         """Ensures an image has even dimensions, determines the images orientation,
@@ -81,10 +80,9 @@ class ImageTools(object):
 
     def pad_image(self, expand_to):
         """Pads an image to a specified dimension."""
-        # this need to find the smallest dim so we can expand that to `expand_to`
+        # this is needed to find the smallest dim so we can expand that to `expand_to`
         min_dim = min(self.width, self.height)
         pad_amount = (expand_to - min_dim) / 2
-        # print min_dim + pad_amount + pad_amount
         padded_image = ImOps.expand(
             self.this_image, border=pad_amount, fill=(255, 255, 255))
         width, height = padded_image.size
@@ -104,7 +102,7 @@ class ImageTools(object):
 
     def square_image(self, crop_to):
         """Crops an image to a specified dimension."""
-        # this need to find the smallest dim so we can expand that to `crop_to`
+        # this is needed to find the largest dim so we can crop that to `crop_to`
         w_crop_amount = (self.width - crop_to) / 2
         h_crop_amount = (self.height - crop_to) / 2
         self.this_image = self.this_image.crop(
@@ -181,7 +179,7 @@ def average_dir(img_path, combination_method, out_name):
     image_heights = []
     total_shutter_open = 0
 
-    # now loop through the list and get exposure times and max dimensions
+    # now loop through the list of files and get exposure times and max dimensions
     for fname in phoot_list:
         current_image = ImageTools(fname)
         this_exposure = current_image.exposure_time_in_s
@@ -193,11 +191,12 @@ def average_dir(img_path, combination_method, out_name):
         image_heights.append(height)
 
     # now that we have the total length, calculate scale factors---
-    # trying to get as close to what would be an actual multiple exposure
-    # as possible
-    scale_factors = []
-    for exp_time in exposure_times:
-        scale_factors.append(exp_time / total_shutter_open)
+    # depending on how you think about making a multiple exposure, scaling by
+    # the total amount of time the shutter was open is the correct way to go.
+    # this time around, though, we'll just approach it more like an average.
+    # scale_factors = []
+    # for exp_time in exposure_times:
+    #     scale_factors.append(exp_time / total_shutter_open)
 
     output_dimension = get_final_dimension(combination_method, image_widths, image_heights)
 
@@ -209,9 +208,8 @@ def average_dir(img_path, combination_method, out_name):
     phoot_list.pop(0)
     r_comp_im, g_comp_im, b_comp_im = current_image.split_scale_image((1.0 / num_images))
 
-    # now loop through the list again and first expand the images
-    # and then combine the images.
-
+    # now loop through the list again and first crop or expand the images
+    # and then combine them.
     progress_counter = 1
     for fname in phoot_list:
         progress_counter += 1
@@ -223,9 +221,6 @@ def average_dir(img_path, combination_method, out_name):
         r_comp_im = ImMath.eval("a + b", a=r_comp_im, b=this_r)
         g_comp_im = ImMath.eval("a + b", a=g_comp_im, b=this_g)
         b_comp_im = ImMath.eval("a + b", a=b_comp_im, b=this_b)
-
-    # (below is what we did before
-    # composite_image = Im.blend(composite_image, this_image,0.2)
 
     # finally convert them back to ints and then merge the image before display.
     r_comp_im = ImMath.eval("convert(a, 'L')", a=r_comp_im)
