@@ -79,7 +79,7 @@ def download_and_average(flickr_set):
                 json.dump(downloaded_images, filename)
 
     # okay, now that we're done with all that, loop through the dirs and make an average.
-    for month in range(1, 12):
+    for month in range(1, 13):
         average_dir(str(month), 'crop', 'average_of_month_' + str(month) + '.jpg')
 
 if __name__ == "__main__":
