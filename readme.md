@@ -1,7 +1,16 @@
 # Photo Manipulation Tools
 
-I don't know what this is going to be, but for right now it's just a place to put little photo processing scripts.
+## average_months.py
+The idea behind this script is to download all the photos from a Flickr set specified by its set ID, organize them by month taken, and then generate one average image (or long exposure simulation) for each month. It leverages `avg_phoots.py` to do the photo manipulation.
 
-If you can use them, cool. :thumbsup:
+Usage:
+    ```./average_months.py [flickr set id]
 
-Smell ya later.
+## avg_phoots.py
+This script will generate an average image (or long exposure simulation) using all the images in a specified folder. 
+
+Usage: 
+    ```./avg_phoots.py [folder] [combination method] [output file name]
+
+`folder` is any folder you have permission to read that contains `.jpg` files.
+`combination method` is either `crop` or `pad`. `crop` means that all images are cropped into square images with dimensions equal to the smallest dimension found in all the images in the folder. `pad` means that all images are padded into square images with dimensions equal to the largest dimension found in all the images in the folder.
