@@ -16,5 +16,7 @@ Usage:
     ./avg_phoots.py [folder] [combination_method] [output_file_name]
 ```
 `folder` is any folder you have permission to read that contains `.jpg` files.
+
 `combination_method` is either `crop` or `pad`. `crop` means that all images are cropped into square images with dimensions equal to the smallest dimension found in all the images in the folder. `pad` means that all images are padded into square images with dimensions equal to the largest dimension found in all the images in the folder.
+
 `output_file_name` is the filename that the average image will be written to.
