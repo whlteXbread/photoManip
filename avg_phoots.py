@@ -150,7 +150,7 @@ def print_status(curr_fname, curr_image, total_images):
         total_images) + ")")
 
 def get_final_dimension(comb_method, image_widths, image_heights):
-    """Computes the dimensions of the final output image based on specified 
+    """Computes the dimensions of the final output image based on specified
      combination method and lists of images widths and heights."""
     if comb_method == PAD:
         max_w = max(image_widths)
