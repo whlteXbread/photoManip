@@ -24,9 +24,9 @@ class ImageTools(object):
     def __init__(self, fname):
         self.this_image = Im.open(fname)
         self.width, self.height = self.this_image.size
-        self.get_exposure_time_in_s()
+        self._calculate_exposure_time_in_s()
 
-    def get_exposure_time_in_s(self):
+    def _calculate_exposure_time_in_s(self):
         """Reads the EXIF data from the image file and calculates the exposure time
          in seconds."""
         self.exif_data = {}
@@ -40,11 +40,11 @@ class ImageTools(object):
     def prepare_image(self, comb_method, final_dimension):
         """Ensures an image has even dimensions, determines the images orientation,
          and either pads or crops an image to a specified final dimension."""
-        self.even_image()
-        self.get_image_orientation()
-        self.pad_or_crop(comb_method, final_dimension)
+        self._even_image()
+        self._get_image_orientation()
+        self._pad_or_crop(comb_method, final_dimension)
 
-    def even_image(self):
+    def _even_image(self):
         """Ensures an image has even dimensions."""
         if (self.width % 2) == 1:
             # crop the width by 1
@@ -55,7 +55,7 @@ class ImageTools(object):
             self.this_image = self.this_image.crop((0, 1, self.width, self.height))
             self.width, self.height = self.this_image.size
 
-    def get_image_orientation(self):
+    def _get_image_orientation(self):
         """Determines the orientation of an image."""
         # do a cheap trick to determine orientation
         if self.width > self.height:
@@ -68,17 +68,17 @@ class ImageTools(object):
             # image is square
             self.image_orientation = SQUARE
 
-    def pad_or_crop(self, comb_method, output_dimension):
+    def _pad_or_crop(self, comb_method, output_dimension):
         """Wrapper function that calls the method to either pad or crop an image based
          on input."""
         if comb_method == PAD:
-            self.pad_image(output_dimension)
+            self._pad_image(output_dimension)
         elif comb_method == CROP:
-            self.square_image(output_dimension)
+            self._square_image(output_dimension)
         else:
             raise ValueError('invalid value for combination_method')
 
-    def pad_image(self, expand_to):
+    def _pad_image(self, expand_to):
         """Pads an image to a specified dimension."""
         # this is needed to find the smallest dim so we can expand that to `expand_to`
         min_dim = min(self.width, self.height)
@@ -100,7 +100,7 @@ class ImageTools(object):
             # don't think I need to do anything here.
             pass
 
-    def square_image(self, crop_to):
+    def _square_image(self, crop_to):
         """Crops an image to a specified dimension."""
         # this is needed to find the largest dim so we can crop that to `crop_to`
         w_crop_amount = (self.width - crop_to) / 2
@@ -245,7 +245,7 @@ def average_dir(img_path, combination_method, out_name):
     # composite_image.show()
     composite_image.save(out_name)
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("img_path", help="path of the directory of images you'd like to process")
     parser.add_argument("combination_method",
@@ -255,3 +255,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     average_dir(args.img_path, args.combination_method, args.out_name)
+
+if __name__ == "__main__":
+    main()
