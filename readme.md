@@ -20,3 +20,12 @@ Usage:
 `combination_method` is either `crop` or `pad`. `crop` means that all images are cropped into square images with dimensions equal to the smallest dimension found in all the images in the folder. `pad` means that all images are padded into square images with dimensions equal to the largest dimension found in all the images in the folder.
 
 `output_file_name` is the filename that the average image will be written to.
+
+## add_date_machine_tags.py
+
+This script will add machine tags to all photos in a specified flickr set with a specified namespace and predicate, but the value will be calculated based on the title (or, if you uncomment a line of code and comment a couple others, the photo's "taken" date). A valid OAuth key with write permissions must be available.
+
+Usage:
+```
+    ./add_date_machine_tags.py [set_id] [namespace] [predicate]
+```
