@@ -192,7 +192,7 @@ class ImageTools(object):
         if self.library == 'cv2':
             return self._split_scale_cv2(scale_factor)
         else:
-            return self._split_scale_cv2(scale_factor)
+            return self._split_scale_pil(scale_factor)
 
 
 # code sample from http://effbot.org/zone/pil-histogram-equalization.htm -------
