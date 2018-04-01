@@ -1,5 +1,5 @@
-#! /usr/local/bin/python3
 import argparse
+import datetime
 import json
 from os import path, makedirs
 from urllib.parse import urlparse
@@ -8,7 +8,7 @@ import flickrapi
 import wget
 
 from apikeys import flickrKey, flickrSecret
-from avg_phoots import average_dir
+from avg_phoots import average_dir, average_each_day
 
 ORIGINAL = 'Original'
 
@@ -48,13 +48,17 @@ class PicInfo(object):
         if not path.exists(path.join(self.picoutdir, o_name)):
             wget.download(download_url, self.picoutdir)
 
-def download_and_average(flickr_set):
+def download_and_average(flickr_set, outdir_prefix='avgmonths'):
     """Downloads all files in a flickr set with ID flickr_set and stores
      them in folders based on which month they were taken."""
     # real quick make some folders for all the months
+    dir_list = []
     for month in range(1, 13):
-        if not path.isdir(str(month)):
-            makedirs(str(month))
+        month_str = path.join(outdir_prefix,
+                              datetime.date(1984, month, 1).strftime('%B').lower())
+        dir_list.append(month_str)
+        if not path.isdir(month_str):
+            makedirs(month_str)
 
     # check to see if there's a download log. if there is, load it. if not, initialize it
     json_dl_db = "downloaded_from_" + flickr_set + ".json"
@@ -71,16 +75,16 @@ def download_and_average(flickr_set):
         else:
             print("\ndownloading " + photo.get('id') + "\n")
             photo_data = PicInfo(photo)
-            month_taken = str(int(photo_data.taken[5:7]))
-            photo_data.picoutdir = month_taken
+            month_taken = datetime.date(1984, int(photo_data.taken[5:7]), 1).strftime('%B').lower()
+            photo_data.picoutdir = path.join(outdir_prefix, month_taken)
             photo_data.download()
             downloaded_images.append(photo.get('id'))
             with open(json_dl_db, 'w') as filename:
                 json.dump(downloaded_images, filename)
 
     # okay, now that we're done with all that, loop through the dirs and make an average.
-    for month in range(1, 13):
-        average_dir(str(month), 'crop', 'average_of_month_' + str(month) + '.jpg')
+    for month in dir_list:
+        average_each_day(month, 'crop', month + '_days')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
