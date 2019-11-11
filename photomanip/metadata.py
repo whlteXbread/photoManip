@@ -1,9 +1,6 @@
-from datetime import datetime
-
 import exiftool
 
 SOFTWARE_NAME = "photomanip v.0.1.0"
-DATETIME_FMT = "%Y:%m:%d %H:%M:%S"
 
 
 class SetExifTool(exiftool.ExifTool):
@@ -72,7 +69,8 @@ class ImageExif:
             return [self.metadata_map[item] for item in tag_iterable]
 
     def get_metadata_batch(self, filename_list, get_list=None):
-        # TODO: HANDLE CASE WHEN FILENAMES ARE PATH OBJECTS
+        # handle case where filenames are path objects
+        filename_list = [str(item) for item in filename_list]
         if get_list:
             get_list = self._generate_tag_list(get_list)
         else:
