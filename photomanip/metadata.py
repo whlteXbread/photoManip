@@ -81,7 +81,8 @@ class ImageExif:
 
     def set_image_metadata(self, fname, meta_dict):
         # generate a metedata template dict
-        meta_template = self._generate_tag_list(meta_dict.keys(), set_tags=True)
+        meta_template = self._generate_tag_list(meta_dict.keys(),
+                                                set_tags=True)
         # now populate the values in the list
         set_list = [meta_template[k].format(v) for k, v in meta_dict.items()]
         with SetExifTool() as et:
