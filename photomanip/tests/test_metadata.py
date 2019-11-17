@@ -6,11 +6,11 @@ from photomanip.metadata import ImageExif, SetExifTool
 
 from nose import tools
 
-ORIGINAL_IMAGE_FILENAME = './turd_ferguson.jpeg'
-TEST_IMAGE_FILENAME = './image_exif_test.jpg'
-ORIGINAL_PHOTO_FILENAME = './test_photo_0.jpg'
-TEST_PHOTO_01_FILENAME = './image_exposure_test_01.jpg'
-TEST_PHOTO_02_FILENAME = './image_exposure_test_02.jpg'
+ORIGINAL_IMAGE_FILENAME = 'photomanip/tests/turd_ferguson.jpeg'
+TEST_IMAGE_FILENAME = 'photomanip/tests/image_exif_test.jpg'
+ORIGINAL_PHOTO_FILENAME = 'photomanip/tests/test_photo_0.jpg'
+TEST_PHOTO_01_FILENAME = 'photomanip/tests/image_exposure_test_01.jpg'
+TEST_PHOTO_02_FILENAME = 'photomanip/tests/image_exposure_test_02.jpg'
 
 
 class TestImageExif:

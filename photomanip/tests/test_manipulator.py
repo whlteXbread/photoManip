@@ -15,13 +15,13 @@ class TestIMCV2:
 
     @classmethod
     def setup_class(cls):
-        cls.fs_grouper = FileSystemGrouper('./')
+        cls.fs_grouper = FileSystemGrouper('photomanip/tests/')
         cls.im_cv2 = ImageManipulatorCV2()
         cls.color_test_image = np.ones((111, 131, 3), dtype=np.bool)
         cls.bw_test_image_3 = np.ones((111, 131, 1), dtype=np.bool)
         cls.bw_test_image_1 = np.ones((111, 131), dtype=np.bool)
-        cls.cv2_pad_fname = Path('./year_pad_cv2.jpeg')
-        cls.cv2_crop_fname = Path('./year_crop_cv2.jpeg')
+        cls.cv2_pad_fname = Path('photomanip/tests/year_pad_cv2.jpeg')
+        cls.cv2_crop_fname = Path('photomanip/tests/year_crop_cv2.jpeg')
 
     @classmethod
     def teardown_class(cls):

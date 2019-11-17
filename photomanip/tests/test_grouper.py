@@ -7,8 +7,11 @@ from photomanip.grouper import FileSystemGrouper
 class TestFileSystemGrouper:
     @classmethod
     def setup_class(cls):
-        cls.fs_grouper_tag = FileSystemGrouper('./', 'faceit365:date=')
-        cls.fs_grouper = FileSystemGrouper('./')
+        cls.fs_grouper_tag = FileSystemGrouper(
+            'photomanip/tests/',
+            'faceit365:date='
+        )
+        cls.fs_grouper = FileSystemGrouper('photomanip/tests/')
 
     @classmethod
     def teardown_class(cls):
