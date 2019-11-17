@@ -93,8 +93,11 @@ class FileSystemGrouper(Grouper):
         Gets a list of files with extension `extension` (default '.jpg') in
         a folder.
         """
+        # find all files with the matching extension recursively
         onlyfiles = \
             sorted(list(self.image_folder_path.glob(f'**/*{extension}')))
+        # resolve full paths
+        onlyfiles = [item.resolve() for item in onlyfiles]
         return onlyfiles
 
     def group_by_day(self):
