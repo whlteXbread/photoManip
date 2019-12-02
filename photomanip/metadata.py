@@ -1,7 +1,5 @@
 import exiftool
 
-SOFTWARE_NAME = "photomanip v.0.1.0"
-
 
 class SetExifTool(exiftool.ExifTool):
 
@@ -10,6 +8,7 @@ class SetExifTool(exiftool.ExifTool):
         params = [filename]
         args = ["-" + t for t in tags]
         params.extend(args)
+        params.append("-overwrite_original")
         params = map(exiftool.fsencode, params)
         return self.execute(*params).decode("utf-8")
 
@@ -68,6 +67,11 @@ class ImageExif:
         else:
             return [self.metadata_map[item] for item in tag_iterable]
 
+    def _generate_keyword_set_list(self, keyword_iterable):
+        keyword_set_string = self.metadata_map["keywords"] + \
+            "+={}"
+        return [keyword_set_string.format(item) for item in keyword_iterable]
+
     def get_metadata_batch(self, filename_list, get_list=None):
         # handle case where filenames are path objects
         filename_list = [str(item) for item in filename_list]
@@ -80,11 +84,19 @@ class ImageExif:
         return metadata_list
 
     def set_image_metadata(self, fname, meta_dict):
+        # tags/keywords are a special case, handle them first
+        keyword_set_list = []
+        if "keywords" in meta_dict:
+            # remove the keywords from the dict
+            keywords = meta_dict.pop("keywords")
+            # make a list of keyword-adding commands
+            keyword_set_list = self._generate_keyword_set_list(keywords)
         # generate a metedata template dict
         meta_template = self._generate_tag_list(meta_dict.keys(),
                                                 set_tags=True)
         # now populate the values in the list
         set_list = [meta_template[k].format(v) for k, v in meta_dict.items()]
+        set_list.extend(keyword_set_list)
         with SetExifTool() as et:
             result = et.set_tags(set_list, fname)
         return result  # i guess
