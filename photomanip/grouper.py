@@ -15,7 +15,7 @@ class Grouper:
     def __init__(self, *args, **kwargs):
         self.metadata_list = None
 
-    def _date_extractor(self, keyword_grouper=None):
+    def date_extractor(self, keyword_grouper=None):
         raise NotImplementedError()
 
     def _height_width_extractor(self, metadata):
@@ -43,20 +43,24 @@ class FileSystemGrouper(Grouper):
         super().__init__(*args, **kwargs)
         self.image_folder_path = Path(image_directory)
         self.exif_reader = ImageExif()
-        self.exif_datetime_key = self.exif_reader.metadata_map['date_created']
-        self.exif_keywords_key = self.exif_reader.metadata_map['keywords']
-        self.exif_height_key = self.exif_reader.metadata_map['image_height']
-        self.exif_width_key = self.exif_reader.metadata_map['image_width']
+        self.exif_datetime_key = self.exif_reader.metadata_map["date_created"]
+        self.exif_keywords_key = self.exif_reader.metadata_map["keywords"]
+        self.exif_height_key = self.exif_reader.metadata_map["image_height"]
+        self.exif_width_key = self.exif_reader.metadata_map["image_width"]
+        self.exp_time_key = self.exif_reader.metadata_map["exposure_time"]
         self.photo_list = self.get_photo_list()
         self.metadata_list = \
             self.exif_reader.get_metadata_batch(self.photo_list)
+        self.grouping_tag = grouping_tag
         self.datetime_dict = self.build_datetime_dict(grouping_tag,
                                                       grouping_fmt)
 
-    def _date_extractor(self,
-                        metadata,
-                        keyword_grouper=None,
-                        grouping_fmt=None):
+    def date_extractor(
+        self,
+        metadata,
+        keyword_grouper=None,
+        grouping_fmt=None
+    ):
         if keyword_grouper:
             # does the image have keywords?
             if self.exif_keywords_key in metadata:
@@ -78,12 +82,16 @@ class FileSystemGrouper(Grouper):
         image_widths = [item[self.exif_width_key] for item in metadata_list]
         return image_heights, image_widths
 
+    def _exposure_time_extractor(self, metadata_list):
+        exposure_times = [item[self.exp_time_key] for item in metadata_list]
+        return exposure_times
+
     def build_datetime_dict(self, grouping_tag, grouping_fmt):
         datetime_dict = defaultdict(list)
         for metadata in self.metadata_list:
-            this_date = self._date_extractor(metadata,
-                                             keyword_grouper=grouping_tag,
-                                             grouping_fmt=grouping_fmt)
+            this_date = self.date_extractor(metadata,
+                                            keyword_grouper=grouping_tag,
+                                            grouping_fmt=grouping_fmt)
             datetime_dict[this_date].append(metadata)
         datetime_dict = OrderedDict(sorted(datetime_dict.items()))
         return datetime_dict
@@ -151,6 +159,10 @@ class FileSystemGrouper(Grouper):
             return crop_to
         else:
             raise ValueError('invalid value for combination_method')
+
+    def get_total_exposure(self, metadata_list):
+        exposure_time_list = self._exposure_time_extractor(metadata_list)
+        return sum(exposure_time_list)
 
 
 class FlickrGrouper(Grouper):
