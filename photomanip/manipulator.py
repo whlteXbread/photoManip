@@ -9,7 +9,6 @@ from skimage import exposure
 from PIL import Image as Im
 from PIL import ImageOps as ImOps
 from PIL import ImageMath as ImMath
-from PIL.ExifTags import TAGS
 
 from photomanip import LANDSCAPE, PORTRAIT, SQUARE, PAD, CROP
 
@@ -154,7 +153,6 @@ class ImageManipulatorCV2(ImageManipulator):
         # now loop through the images, crop or expand them, and then combine.
         for index, metadata in enumerate(metadata_list):
             fname = metadata['SourceFile']
-            print(fname, os.getcwd())
             self.print_status(fname, index + 1, num_images)
             current_image = self._read_image(fname)
             current_image = self.prepare_image(
