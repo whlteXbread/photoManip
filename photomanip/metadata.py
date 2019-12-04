@@ -19,7 +19,7 @@ class ImageExif:
         "image_width": "File:ImageWidth",
         "image_height": "File:ImageHeight",
         "keywords": "IPTC:Keywords",
-        "date_created": "Composite:DateTimeCreated",
+        "date_created": "EXIF:DateTimeOriginal",
         "caption": "IPTC:Caption-Abstract",
         "name": "IPTC:ObjectName",
         "software": "EXIF:Software",
