@@ -30,7 +30,7 @@ class ConstructMetadata:
         'python',
         'opencv'
     ]
-    DAILY_CAPTION = "{count:06} image exposure\\n" + \
+    DAILY_CAPTION = "{count:06} image exposure\r" + \
         "{seconds:.4f} seconds exposed"
     DAILY_TITLE = "avg{date}"
     MONTHLY_TAG_LIST = [
@@ -45,7 +45,7 @@ class ConstructMetadata:
         'opencv'
     ]
     MONTHLY_CAPTION = "average of all daily photos published " + \
-        "{month_name} {year}\\n{count:06} image exposure\\n" + \
+        "{month_name} {year}\r{count:06} image exposure\r" + \
         "{seconds:.4f} seconds exposed"
     MONTHLY_TITLE = "avg {short_month_name}"
     YEARLY_TAG_LIST = [
@@ -59,7 +59,7 @@ class ConstructMetadata:
         'opencv'
     ]
     YEARLY_CAPTION = "average of all daily photos published " + \
-        "in {year}\\n{count:06} image exposure\\n" + \
+        "in {year}\r{count:06} image exposure\r" + \
         "{seconds:.4f} seconds exposed"
     YEARLY_TITLE = "avg {year}"
 
