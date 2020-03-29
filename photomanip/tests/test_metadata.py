@@ -37,7 +37,7 @@ class TestImageExif:
         # test get list
         tag_list = self.image_exif._generate_tag_list(get_list)
         tools.eq_(set(tag_list), set([
-            'Composite:DateTimeCreated',
+            'EXIF:DateTimeOriginal',
             'File:ImageHeight',
             'IPTC:Keywords',
             'EXIF:ExposureTime',
@@ -46,7 +46,7 @@ class TestImageExif:
         # test set list
         tag_list = self.image_exif._generate_tag_list(get_list, True)
         tools.eq_(tag_list, {
-            'date_created': 'Composite:DateTimeCreated={}',
+            'date_created': 'EXIF:DateTimeOriginal={}',
             'exposure_time': 'EXIF:ExposureTime={}',
             'image_height': 'File:ImageHeight={}',
             'image_width': 'File:ImageWidth={}',
