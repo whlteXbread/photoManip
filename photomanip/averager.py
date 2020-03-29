@@ -3,8 +3,6 @@ from datetime import datetime
 from pathlib import Path
 from timeit import default_timer as timer
 
-import click
-
 from photomanip import PAD, CROP
 from photomanip.grouper import (
     DAILY_DATETIME_FMT,
@@ -231,6 +229,7 @@ class Averager:
         return self.output_path / fname
 
     def average_photos(self, meta_dict, path_calculator, metadata_calculator):
+        average_images = []
         start = timer()
         for date_key, meta_list in meta_dict.items():
             if len(meta_list) == 1:
@@ -242,6 +241,8 @@ class Averager:
             if output_name.exists():
                 print(f"file {output_name} already generated, skipping")
                 continue
+            # store filename for bookkeeping
+            average_images.append(output_name)
             print(f"working on photos from {date_key}")
             # calculate output dimension
             common_dimension = self.fs_grouper.get_common_dimension(
@@ -266,108 +267,40 @@ class Averager:
                 calculated_meta
             )
         end = timer()
-        return end - start
+        return end - start, average_images
 
     def average_by_day(self):
         print("now processing daily images")
         meta_dict = self.fs_grouper.group_by_day()
-        elapsed = self.average_photos(
+        elapsed, image_list = self.average_photos(
             meta_dict,
             self._calculate_day_avg_path,
             self.metadata_generator.generate_daily_metadata
         )
         print(f"seconds elapsed processing daily images: {elapsed}")
+        return image_list
 
     def average_by_month(self):
         print("now processing monthly images")
         meta_dict = self.fs_grouper.group_by_month()
-        elapsed = self.average_photos(
+        elapsed, image_list = self.average_photos(
             meta_dict,
             self._calculate_month_avg_path,
             self.metadata_generator.generate_monthly_metadata
         )
         print(f"seconds elapsed processing monthly images: {elapsed}")
+        return image_list
 
     def average_by_year(self):
         print("now processing yearly images")
         meta_dict = self.fs_grouper.group_by_year()
-        elapsed = self.average_photos(
+        elapsed, image_list = self.average_photos(
             meta_dict,
             self._calculate_year_avg_path,
             self.metadata_generator.generate_yearly_metadata
         )
         print(f"seconds elapsed processing yearly images: {elapsed}")
+        return image_list
 
     def average_all(self):
-        pass
-
-
-@click.command()
-@click.option(
-    "-i",
-    "--image_path",
-    help="path of the directory of images you'd like to process",
-    required=True,
-    type=click.STRING
-)
-@click.option(
-    "-o",
-    "--output_path",
-    help="path where averages should be placed",
-    required=True,
-    type=click.STRING
-)
-@click.option(
-    "-c",
-    "--combination_method",
-    help="""either 'crop' (all images are cropped to smallest dimension) \
-            or 'pad' (all images are padded to largest dimension)).\
-            Default is `crop`""",
-    required=True,
-    type=click.STRING,
-    default="crop"
-)
-@click.option(
-    "-t",
-    "--grouping_tag",
-    help="""setting this option will search IPTC keywords for a keyword\
-            beginning with the specified string. it will then strip the\
-            specified string from the tag and attempt to convert the rest\
-            of the keyword to a date. that date will then be used for\
-            grouping. Default is None.""",
-    required=False,
-    type=click.STRING,
-    default=None
-)
-@click.option(
-    "-a",
-    "--author",
-    help="""specifies the author of the generated images. Default is\
-         Andrew Catellier.""",
-    required=False,
-    type=click.STRING,
-    default="andrew catellier"
-)
-def main(image_path, output_path, combination_method, grouping_tag, author):
-    """
-    Main function to parse commandline arguments and start the averaging
-    function.
-    """
-    metadata_generator = ConstructMetadata(
-        author,
-        "all rights reserved"
-    )
-    photo_averager = Averager(
-        Path(image_path),
-        Path(output_path),
-        metadata_generator,
-        grouping_tag=grouping_tag,
-        comb_method=combination_method
-    )
-    photo_averager.average_by_day()
-    photo_averager.average_by_month()
-    photo_averager.average_by_year()
-
-
-if __name__ == "__main__":
-    main()
+        raise NotImplementedError()
