@@ -2,11 +2,26 @@ import exiftool
 
 
 class SetExifTool(exiftool.ExifTool):
+    """updates exiftool.ExifTool with capability for writing exif tags."""
 
     def set_tags(self, tags, filename):
-        """Sets specified tags for a single file"""
+        """sets specified tags for a single file.
+
+        Parameters
+        ----------
+        tags : list
+            contains strings with tags in the format TAG_NAME=TAG_VALUE
+        filename : string
+            path to image file to be modified
+
+        Returns
+        -------
+        string
+            output from exif writing subprocess
+        """
+        # Sets specified tags for a single file
         params = [filename]
-        args = ["-" + t for t in tags]
+        args = [f"-{t}" for t in tags]
         params.extend(args)
         params.append("-overwrite_original")
         params = map(exiftool.fsencode, params)
@@ -14,6 +29,7 @@ class SetExifTool(exiftool.ExifTool):
 
 
 class ImageExif:
+    """class to get and set metadata from photos"""
     metadata_map = {
         "exposure_time": "EXIF:ExposureTime",
         "image_width": "File:ImageWidth",
@@ -73,6 +89,21 @@ class ImageExif:
         return [keyword_set_string.format(item) for item in keyword_iterable]
 
     def get_metadata_batch(self, filename_list, get_list=None):
+        """gets all metadata specified in get_list or self.get_list from all
+        files in filename_list
+
+        Parameters
+        ----------
+        filename_list : list
+            contains path-like objects for images
+        get_list : list or set, optional
+            contains metadata type keys, by default None
+
+        Returns
+        -------
+        list
+            contains dictionaries of image metadata
+        """
         # handle case where filenames are path objects
         filename_list = [str(item) for item in filename_list]
         if get_list:
@@ -84,6 +115,21 @@ class ImageExif:
         return metadata_list
 
     def set_image_metadata(self, fname, meta_dict):
+        """sets the the metadata specified in mata_dict for the image with
+        path fname
+
+        Parameters
+        ----------
+        fname : string
+            path-like string containing path to image file to be modified
+        meta_dict : dict
+            contains the metadata to be added
+
+        Returns
+        -------
+        str
+            output from the exif-writing subprocess
+        """
         # tags/keywords are a special case, handle them first
         keyword_set_list = []
         if "keywords" in meta_dict:
@@ -102,6 +148,21 @@ class ImageExif:
         return result  # i guess
 
     def get_tags_containing(self, keyword_list, search_term):
+        """searches for kewords containing search_term in a list of keywords
+
+        Parameters
+        ----------
+        keyword_list : list
+            contains keywords associated with an image
+        search_term : str
+            substring to search for in all keywouds
+
+        Returns
+        -------
+        list or str
+            list of keywords containing substring if more than one,
+            otherwise just the string containing the substring
+        """
         tags = [tag for tag in keyword_list if search_term in str(tag)]
         if len(tags) == 1:
             tags = tags[0]
