@@ -13,7 +13,7 @@ class Uploader:
 
     def yaml_file_to_dict(self, filename):
         with open(filename) as yaml_file:
-            return yaml.load(yaml_file)
+            return yaml.safe_load(yaml_file)
 
     def _upload_file(self, filename):
         raise NotImplementedError()
