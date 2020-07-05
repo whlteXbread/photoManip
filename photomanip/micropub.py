@@ -46,6 +46,7 @@ class MicropubAPI:
             return response.headers["Location"]
         else:
             print("  Failed to upload! Status code", response.status_code)
+            print("  error:", response.text)
             sys.exit(1)
             return None
 
