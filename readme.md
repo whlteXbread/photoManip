@@ -1,3 +1,5 @@
+![photomanip](https://github.com/whlteXbread/photoManip/workflows/photomanip/badge.svg)
+
 # Photo Manipulation Tools
 
 The `photomanip` package has undergone significant refactoring and is in a state of flux.
