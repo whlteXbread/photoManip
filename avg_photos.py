@@ -65,13 +65,26 @@ specified flickr set.""",
     type=click.STRING,
     default=None
 )
+@click.option(
+    "-k",
+    "--cache",
+    help="""keep a length 2 cache of previously generated monthly and \
+yearly averages. depending on image size, cache may use a significant \
+amount of storage space (500 MB - 1.5 GB), but greatly decreases \
+processing time when generating averages with many images.""",
+    show_default=True,
+    required=False,
+    type=click.BOOL,
+    default=True
+)
 def main(
     image_path,
     output_path,
     combination_method,
     grouping_tag,
     author,
-    flickr_set_id
+    flickr_set_id,
+    cache
 ):
     """
     Main function to parse commandline arguments and start the averaging
@@ -88,9 +101,15 @@ def main(
         grouping_tag=grouping_tag,
         comb_method=combination_method
     )
-    cwd = os.getcwd()
-    default_cache_path = Path(cwd) / '.avg_cache'
-    default_cache_path.mkdir(exist_ok=True)
+    if cache:
+        cwd = os.getcwd()
+        default_cache_path = Path(cwd) / '.avg_cache'
+        default_cache_path.mkdir(exist_ok=True)
+        month_cache = default_cache_path / "monthly"
+        year_cache = default_cache_path / "yearly"
+    else:
+        month_cache = None
+        year_cache = None
     # dailies
     daily_average_list = photo_averager.average_by_day()
     if flickr_set_id:
@@ -98,9 +117,9 @@ def main(
         for fname in daily_average_list:
             flickr_uploader.upload(fname, flickr_set_id)
     # monthlies
-    photo_averager.average_by_month(default_cache_path / "monthly")
+    photo_averager.average_by_month(month_cache)
     # yearly
-    photo_averager.average_by_year(default_cache_path / "yearly")
+    photo_averager.average_by_year(year_cache)
 
 
 if __name__ == "__main__":

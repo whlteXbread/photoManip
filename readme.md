@@ -1,6 +1,6 @@
 # Photo Manipulation Tools
 
-The photomanip library has undergone significant refactoring and is in a state of flux.
+The `photomanip` package has undergone significant refactoring and is in a state of flux.
 In general the old code was embarrassing spaghetti code I put together to quickly do something I wanted to do.
 Now it's less embarrassing and hopefully more maintainable.
 
@@ -12,6 +12,7 @@ Notes:
 ### avg_photos.py
 
 This script will generate an average image (or long exposure simulation) using all the images in a specified folder.
+It assumes that the images include metadata about when they were created, and will try to make averages for each day with multiple images, each month with multiple images, and each year with multiple images.
 
 Usage:
 ```
@@ -26,6 +27,18 @@ Usage:
 `grouping_tag` is a prefix to an IPTC keyword that contains a date in YYYYMMDD format, for example with the keyword `mydate=19991231`, the grouping tag would be `mydate=`. this can be used to group photos instead of the EXIF `DateTimeCreated` if desired. Default is `None`.
 
 `author` is the author generating the average image. Default is `andrew catellier`, in case you want to give me credit for creating your average images.
+
+`flickr_set_id` is a valid Flickr photoset ID to which you have upload permissions. If set, the program will attempt to upload daily averages to flickr using a key and secret specified in `config.yaml`:
+
+```
+flickr:
+  key:
+    '[FLICKR_KEY]'
+  secret:
+    '[FLICKR_SECRET]'
+```
+
+`cache` is boolean, specifying whether the program should keep track of intermediate average results. This cache can significantly reduce processing time if one is repeatedly generating averages from one set of images but can also take a significant amount of space—the cache images are M x N x 3 32 bit float TIFs.
 
 ## Deprecated Tools
 ### average_months.py
