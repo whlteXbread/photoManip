@@ -1,0 +1,6 @@
+click
+flickrapi
+pillow
+pyexiftool
+pyyaml
+scikit-image
