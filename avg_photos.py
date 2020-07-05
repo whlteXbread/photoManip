@@ -1,3 +1,5 @@
+import os
+
 from pathlib import Path
 
 import click
@@ -86,6 +88,9 @@ def main(
         grouping_tag=grouping_tag,
         comb_method=combination_method
     )
+    cwd = os.getcwd()
+    default_cache_path = Path(cwd) / '.avg_cache'
+    default_cache_path.mkdir(exist_ok=True)
     # dailies
     daily_average_list = photo_averager.average_by_day()
     if flickr_set_id:
@@ -93,9 +98,9 @@ def main(
         for fname in daily_average_list:
             flickr_uploader.upload(fname, flickr_set_id)
     # monthlies
-    photo_averager.average_by_month()
+    photo_averager.average_by_month(default_cache_path / "monthly")
     # yearly
-    photo_averager.average_by_year()
+    photo_averager.average_by_year(default_cache_path / "yearly")
 
 
 if __name__ == "__main__":

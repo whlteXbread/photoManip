@@ -2,9 +2,8 @@ import os
 
 from pathlib import Path
 
-import cv2
 import numpy as np
-from skimage import exposure
+from skimage import exposure, io
 
 from PIL import Image as Im
 from PIL import ImageOps as ImOps
@@ -65,7 +64,7 @@ class ImageManipulator:
         raise NotImplementedError()
 
 
-class ImageManipulatorCV2(ImageManipulator):
+class ImageManipulatorSKI(ImageManipulator):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -74,7 +73,8 @@ class ImageManipulatorCV2(ImageManipulator):
         return np.atleast_3d(image)
 
     def _read_image(self, filename):
-        return cv2.imread(filename, cv2.IMREAD_COLOR)
+        filepath = Path(filename)
+        return io.imread(filepath)
 
     def _even_image(self, image):
         """Ensures an image has even dimensions."""
@@ -135,6 +135,7 @@ class ImageManipulatorCV2(ImageManipulator):
     def combine_images(self,
                        metadata_list: list,
                        output_dimension: int,
+                       num_images: int,
                        out_name: Path,
                        combination_method: str = PAD,
                        write_crops: bool = False):
@@ -143,7 +144,6 @@ class ImageManipulatorCV2(ImageManipulator):
         # preallocate
         composite_image = np.zeros((output_dimension, output_dimension, 3),
                                    dtype=float)
-        num_images = len(metadata_list)
 
         if write_crops:
             # split off the filename and use that to make a dir
@@ -151,7 +151,8 @@ class ImageManipulatorCV2(ImageManipulator):
             individual_path.mkdir(exist_ok=True)
 
         # now loop through the images, crop or expand them, and then combine.
-        for index, metadata in enumerate(metadata_list):
+        index = 0
+        for metadata in metadata_list:
             fname = metadata['SourceFile']
             self.print_status(fname, index + 1, num_images)
             current_image = self._read_image(fname)
@@ -162,11 +163,27 @@ class ImageManipulatorCV2(ImageManipulator):
             )
             if write_crops:
                 # write out the image before it gets scaled
-                cv2.imwrite(str(individual_path / f'{index}.jpg'),
-                            current_image)
-            scaled_image = self.split_scale_image(current_image, num_images)
+                io.imsave(str(individual_path / f'{index}.jpg'),
+                          current_image.astype('uint8'))
+            if "cached" in metadata:
+                if metadata["cached"]:
+                    scaled_image = current_image
+                    index += metadata["num_images"]
+                else:
+                    scaled_image = self.split_scale_image(
+                        current_image,
+                        num_images
+                    )
+                    index += 1
+            else:
+                scaled_image = self.split_scale_image(
+                    current_image,
+                    num_images
+                )
+                index += 1
             composite_image += scaled_image
 
+        composite_float = np.copy(composite_image)
         # Contrast stretching
         data_mask = composite_image != 255
         lower_bound, upper_bound = \
@@ -177,7 +194,8 @@ class ImageManipulatorCV2(ImageManipulator):
                                        out_range='uint8')
 
         # write the image
-        cv2.imwrite(str(out_name), composite_image)
+        io.imsave(str(out_name), composite_image.astype('uint8'))
+        return composite_float
 
 
 class ImageManipulatorPIL(ImageManipulator):
