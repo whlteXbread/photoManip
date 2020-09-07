@@ -32,4 +32,4 @@ jobs:
     - name: Test with nosetest
       run: |
         pip install nose
-        nosetests
+        nosetests --with-coverage --cover-package=photomanip
