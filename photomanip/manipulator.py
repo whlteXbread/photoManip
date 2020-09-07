@@ -1,9 +1,9 @@
 from pathlib import Path
 
 import numpy as np
-from skimage import exposure, io
+from skimage import exposure, io, transform
 
-from photomanip import LANDSCAPE, PORTRAIT, SQUARE, PAD, CROP
+from photomanip import LANDSCAPE, PORTRAIT, SQUARE, PAD, CROP, RESIZE
 
 
 class ImageManipulator:
@@ -16,13 +16,16 @@ class ImageManipulator:
     def _even_image(self, *args, **kwargs):
         raise NotImplementedError()
 
-    def _pad_or_crop(self, *args, **kwargs):
+    def _prepare_image(self, *args, **kwargs):
         raise NotImplementedError()
 
     def _pad_image(self, *args, **kwargs):
         raise NotImplementedError()
 
     def _square_image(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def _resize_image(self, *args, **kwargs):
         raise NotImplementedError()
 
     def _get_image_orientation(self, image):
@@ -50,7 +53,7 @@ class ImageManipulator:
         """Ensures an image has even dimensions, determines the images orientation,
          and either pads or crops an image to a specified final dimension."""
         image = self._even_image(image)
-        image = self._pad_or_crop(image, comb_method, final_dimension)
+        image = self._prepare_image(image, comb_method, final_dimension)
         return image
 
     def split_scale_image(self, image, scale_factor):
@@ -65,6 +68,32 @@ class ImageManipulatorSKI(ImageManipulator):
     @staticmethod
     def __ensure_3_dims(image):
         return np.atleast_3d(image)
+
+    @staticmethod
+    def _calculate_resize_dimensions(height, width, resize_to):
+
+        # np ftw
+        image_size = np.array([height, width])
+
+        # find min and max dimensions, and their locations
+        min_dim = np.min(image_size)
+        min_ind = np.argmin(image_size)
+        max_dim = np.max(image_size)
+        max_ind = np.argmax(image_size)
+
+        # calculate aspect ratio
+        aspect_ratio = max_dim / min_dim
+
+        # calculate new size
+        new_min_dim = resize_to
+        new_max_dim = int(round(resize_to * aspect_ratio))
+
+        # store new size
+        image_size[min_ind] = new_min_dim
+        image_size[max_ind] = new_max_dim
+
+        # you did it
+        return tuple(image_size)
 
     def _read_image(self, filename):
         filepath = Path(filename)
@@ -82,16 +111,17 @@ class ImageManipulatorSKI(ImageManipulator):
             image = image[1:, 0:, :]
         return image
 
-    def _pad_or_crop(self, image, comb_method, output_dimension):
+    def _prepare_image(self, image, comb_method, output_dimension):
         """Wrapper function that calls the method to either pad or crop an image based
          on input."""
-        if comb_method == PAD:
-            image = self._pad_image(image, output_dimension)
-        elif comb_method == CROP:
-            image = self._square_image(image, output_dimension)
-        else:
-            raise ValueError('invalid value for combination_method')
-        return image
+        combination_methods = {
+            PAD: self._pad_image,
+            CROP: self._square_image,
+            RESIZE: self._resize_image,
+        }
+        comb_method = combination_methods[comb_method]
+
+        return comb_method(image, output_dimension)
 
     def _pad_image(self, image, expand_to):
         """Pads an image to a specified dimension."""
@@ -122,6 +152,37 @@ class ImageManipulatorSKI(ImageManipulator):
         ]
         return square_image
 
+    def _resize_image(self, image, resize_to):
+        # resizes image to requested dimension
+        image = self.__ensure_3_dims(image)
+        height, width, depth = image.shape
+
+        # figure out if we are upscaling or downscaling
+        # if downscaling, do anti_aliasing
+        max_dim = max(height, width)
+        downscaling = max_dim > resize_to
+
+        # calculate output dimensions
+        new_height, new_width = self._calculate_resize_dimensions(
+            height,
+            width,
+            resize_to
+        )
+
+        # resize the image, unless somehow they're exactly equal
+        if height == new_height or width == new_width:
+            new_image = self._even_image(image)
+        else:
+            new_image = transform.resize(
+                image,
+                (new_height, new_width, depth),
+                preserve_range=True,
+                anti_aliasing=downscaling
+            )
+            new_image = self._even_image(new_image)
+
+        return self._square_image(new_image, resize_to)
+
     def split_scale_image(self, image, divisor):
         """Divides `image` by a divisor and returns it."""
         return image / divisor
@@ -131,7 +192,7 @@ class ImageManipulatorSKI(ImageManipulator):
                        output_dimension: int,
                        num_images: int,
                        out_name: Path,
-                       combination_method: str = PAD,
+                       combination_method: str = RESIZE,
                        write_crops: bool = False):
         """Uses OpenCV and associated methods to "average" a list of photographs.
         """

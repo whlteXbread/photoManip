@@ -27,11 +27,13 @@ from photomanip.uploader import FlickrUploader
     "-c",
     "--combination_method",
     help="""either 'crop' (all images are cropped to smallest dimension) \
-or 'pad' (all images are padded to largest dimension).""",
+or 'pad' (all images are padded to largest dimension) \
+or 'resize' (images are resized to the same dimension as the largest image \
+WARNING: this option is very slow and uses a large amount of memory!).""",
     show_default=True,
     required=True,
-    type=click.Choice(['crop', 'pad'], case_sensitive=False),
-    default="crop"
+    type=click.Choice(["crop", "pad", "resize"], case_sensitive=False),
+    default="resize"
 )
 @click.option(
     "-t",

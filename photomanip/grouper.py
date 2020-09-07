@@ -2,7 +2,7 @@ from collections import defaultdict, OrderedDict
 from datetime import datetime
 from pathlib import Path
 
-from photomanip import PAD, CROP
+from photomanip import PAD, CROP, RESIZE
 from photomanip.metadata import ImageExif
 
 DATETIME_FMT = "%Y:%m:%d %H:%M:%S"
@@ -143,7 +143,7 @@ class FileSystemGrouper(Grouper):
         combination method and lists of images widths and heights."""
         image_heights, image_widths = \
             self._height_width_extractor(metadata_list)
-        if comb_method == PAD:
+        if comb_method == PAD or comb_method == RESIZE:
             max_w = max(image_widths)
             max_h = max(image_heights)
             expand_to = max(max_w, max_h)
