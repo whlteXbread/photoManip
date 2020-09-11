@@ -79,6 +79,17 @@ processing time when generating averages with many images.""",
     type=click.BOOL,
     default=True
 )
+@click.option(
+    "-p",
+    "--progressive",
+    help="""for monthly and yerly averages, generate averages \
+for each successive day. this allows one to see how the average images \
+accumulate information/data over time.""",
+    show_default=True,
+    required=False,
+    type=click.BOOL,
+    default=True
+)
 def main(
     image_path,
     output_path,
@@ -86,7 +97,8 @@ def main(
     grouping_tag,
     author,
     flickr_set_id,
-    cache
+    cache,
+    progressive
 ):
     """
     Main function to parse commandline arguments and start the averaging
@@ -119,9 +131,9 @@ def main(
         for fname in daily_average_list:
             flickr_uploader.upload(fname, flickr_set_id)
     # monthlies
-    photo_averager.average_by_month(month_cache)
+    photo_averager.average_by_month(month_cache, progressive)
     # yearly
-    photo_averager.average_by_year(year_cache)
+    photo_averager.average_by_year(year_cache, progressive)
 
 
 if __name__ == "__main__":

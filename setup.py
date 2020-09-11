@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='photomanip',
-      version='0.2.1',
+      version='0.3.0',
       description='average like, all the photos',
       author='Andrew Catellier',
       author_email='andrew@thisisreal.net',

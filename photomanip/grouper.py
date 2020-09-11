@@ -52,8 +52,10 @@ class FileSystemGrouper(Grouper):
         self.metadata_list = \
             self.exif_reader.get_metadata_batch(self.photo_list)
         self.grouping_tag = grouping_tag
-        self.datetime_dict = self.build_datetime_dict(grouping_tag,
-                                                      grouping_fmt)
+        self.datetime_dict = self.build_datetime_dict(
+            grouping_tag,
+            grouping_fmt
+        )
 
     def date_extractor(
         self,
@@ -136,6 +138,44 @@ class FileSystemGrouper(Grouper):
                 grouped[new_key].extend(meta)
             else:
                 grouped[new_key].append(meta[0])
+        return grouped
+
+    def group_by_month_progressive(self):
+        grouped = defaultdict(list)
+        start_date = next(iter(self.datetime_dict.keys()))
+        # scary time complex loop, but we have a cache for the image processing
+        # operations
+        for stop_date in self.datetime_dict.keys():
+            current_month = stop_date.month
+            new_key = datetime(stop_date.year, stop_date.month, stop_date.day)
+            # if we've moved on to the next month, update start date
+            if not start_date.month == current_month:
+                start_date = stop_date
+            for date, meta in self.datetime_dict.items():
+                if date >= start_date and date <= stop_date:
+                    if len(meta) > 1:
+                        grouped[new_key].extend(meta)
+                    else:
+                        grouped[new_key].append(meta[0])
+        return grouped
+
+    def group_by_year_progressive(self):
+        grouped = defaultdict(list)
+        start_date = next(iter(self.datetime_dict.keys()))
+        # scary time complex loop, but we have a cache for the image processing
+        # operations
+        for stop_date in self.datetime_dict.keys():
+            current_year = stop_date.year
+            new_key = datetime(stop_date.year, stop_date.month, stop_date.day)
+            # if we've moved on to the next year, update start date
+            if not start_date.year == current_year:
+                start_date = stop_date
+            for date, meta in self.datetime_dict.items():
+                if date >= start_date and date <= stop_date:
+                    if len(meta) > 1:
+                        grouped[new_key].extend(meta)
+                    else:
+                        grouped[new_key].append(meta[0])
         return grouped
 
     def get_common_dimension(self, comb_method, metadata_list):

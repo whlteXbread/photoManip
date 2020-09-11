@@ -17,7 +17,7 @@ from photomanip.grouper import (
 from photomanip.manipulator import ImageManipulatorSKI
 from photomanip.metadata import ImageExif
 
-SOFTWARE_NAME = "photomanip v.0.2.0"
+SOFTWARE_NAME = "photomanip v.0.3.0"
 DATETIME_FMT = "%Y:%m:%d %H:%M:%S"
 
 
@@ -433,9 +433,12 @@ class Averager:
         print(f"seconds elapsed processing daily images: {elapsed}")
         return image_list
 
-    def average_by_month(self, cache_dir=None):
+    def average_by_month(self, cache_dir=None, progressive=False):
         print("now processing monthly images")
-        meta_dict = self.fs_grouper.group_by_month()
+        if progressive:
+            meta_dict = self.fs_grouper.group_by_month_progressive()
+        else:
+            meta_dict = self.fs_grouper.group_by_month()
         elapsed, image_list = self.average_photos(
             meta_dict,
             self._calculate_month_avg_path,
@@ -445,9 +448,12 @@ class Averager:
         print(f"seconds elapsed processing monthly images: {elapsed}")
         return image_list
 
-    def average_by_year(self, cache_dir=None):
+    def average_by_year(self, cache_dir=None, progressive=False):
         print("now processing yearly images")
-        meta_dict = self.fs_grouper.group_by_year()
+        if progressive:
+            meta_dict = self.fs_grouper.group_by_year_progressive()
+        else:
+            meta_dict = self.fs_grouper.group_by_year()
         elapsed, image_list = self.average_photos(
             meta_dict,
             self._calculate_year_avg_path,
