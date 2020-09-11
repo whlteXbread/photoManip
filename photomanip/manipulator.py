@@ -222,8 +222,9 @@ class ImageManipulatorSKI(ImageManipulator):
                           current_image.astype('uint8'))
             if "cached" in metadata:
                 if metadata["cached"]:
-                    scaled_image = current_image
-                    index += metadata["num_images"]
+                    previous_num_images = metadata["num_images"]
+                    current_image *= previous_num_images
+                    index += previous_num_images
                 else:
                     scaled_image = self.split_scale_image(
                         current_image,
@@ -231,11 +232,11 @@ class ImageManipulatorSKI(ImageManipulator):
                     )
                     index += 1
             else:
-                scaled_image = self.split_scale_image(
-                    current_image,
-                    num_images
-                )
                 index += 1
+            scaled_image = self.split_scale_image(
+                current_image,
+                num_images
+            )
             composite_image += scaled_image
 
         composite_float = np.copy(composite_image)
